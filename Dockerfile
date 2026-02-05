@@ -31,6 +31,9 @@ RUN pnpm ui:build
 
 ENV NODE_ENV=production
 
+# Make openclaw CLI available globally
+RUN ln -s /app/openclaw.mjs /usr/local/bin/openclaw && chmod +x /app/openclaw.mjs
+
 # Allow non-root user to write temp files during runtime/tests.
 RUN chown -R node:node /app
 
