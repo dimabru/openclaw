@@ -23,10 +23,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 {
   "gateway": {
     "port": $GATEWAY_PORT,
-    "bind": "lan",
-    "controlUi": {
-      "dangerouslyDisableDeviceAuth": true
-    }
+    "bind": "lan"
   },
   "plugins": {
     "entries": {
@@ -70,8 +67,10 @@ else
     cfg.gateway = cfg.gateway || {};
     cfg.gateway.port = $GATEWAY_PORT;
     cfg.gateway.bind = 'lan';
-    cfg.gateway.controlUi = cfg.gateway.controlUi || {};
-    cfg.gateway.controlUi.dangerouslyDisableDeviceAuth = true;
+    // Remove dangerouslyDisableDeviceAuth if it was previously set
+    if (cfg.gateway.controlUi) {
+      delete cfg.gateway.controlUi.dangerouslyDisableDeviceAuth;
+    }
     // Enable channel plugins (bundled plugins are disabled by default)
     cfg.plugins = cfg.plugins || {};
     cfg.plugins.entries = cfg.plugins.entries || {};
