@@ -28,6 +28,15 @@ if [ ! -f "$CONFIG_FILE" ]; then
       "dangerouslyDisableDeviceAuth": true
     }
   },
+  "plugins": {
+    "entries": {
+      "whatsapp": { "enabled": true },
+      "telegram": { "enabled": true },
+      "discord": { "enabled": true },
+      "slack": { "enabled": true },
+      "signal": { "enabled": true }
+    }
+  },
   "auth": {
     "profiles": {
       "anthropic:default": {
@@ -63,8 +72,16 @@ else
     cfg.gateway.bind = 'lan';
     cfg.gateway.controlUi = cfg.gateway.controlUi || {};
     cfg.gateway.controlUi.dangerouslyDisableDeviceAuth = true;
+    // Enable channel plugins (bundled plugins are disabled by default)
+    cfg.plugins = cfg.plugins || {};
+    cfg.plugins.entries = cfg.plugins.entries || {};
+    cfg.plugins.entries.whatsapp = { enabled: true };
+    cfg.plugins.entries.telegram = { enabled: true };
+    cfg.plugins.entries.discord = { enabled: true };
+    cfg.plugins.entries.slack = { enabled: true };
+    cfg.plugins.entries.signal = { enabled: true };
     fs.writeFileSync('$CONFIG_FILE', JSON.stringify(cfg, null, 2));
-    console.log('Config updated with port=$GATEWAY_PORT, bind=lan');
+    console.log('Config updated with port=$GATEWAY_PORT, bind=lan, plugins enabled');
   " || echo "Warning: Could not update config, relying on env vars"
 fi
 
