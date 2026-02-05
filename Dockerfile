@@ -39,9 +39,8 @@ RUN chown -R node:node /app
 # This reduces the attack surface by preventing container escape via root privileges
 USER node
 
-# Start gateway server.
-# Uses PORT env var (default 18789) and binds to 0.0.0.0 for container platforms.
+# Start gateway server via startup script.
+# The script handles config setup (port, bind, auth settings) and disk cleanup.
+# For Render/container platforms, set PORT env var (default 8080 in script).
 # For security, set OPENCLAW_GATEWAY_TOKEN or OPENCLAW_GATEWAY_PASSWORD env var.
-#
-# Shell form is required to expand $PORT at runtime.
-CMD node dist/index.js gateway --port "${PORT:-18789}" --bind lan --allow-unconfigured
+CMD ["bash", "scripts/render_start.sh"]
