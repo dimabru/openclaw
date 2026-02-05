@@ -12,12 +12,18 @@ SESSIONS_DIR="${OPENCLAW_SESSIONS_DIR:-/tmp/openclaw-sessions}"
 # Create config directory
 mkdir -p "$CONFIG_DIR"
 
-# Create minimal config if it doesn't exist
+# Create or update config file
+# Note: port/bind are also set via env vars as backup, but setting in config
+# ensures consistency across restarts and removes any stale settings
+GATEWAY_PORT="${PORT:-8080}"
+
 if [ ! -f "$CONFIG_FILE" ]; then
   echo "Creating initial config..."
   cat > "$CONFIG_FILE" << EOF
 {
   "gateway": {
+    "port": $GATEWAY_PORT,
+    "bind": "lan",
     "controlUi": {
       "dangerouslyDisableDeviceAuth": true
     }
@@ -46,6 +52,20 @@ if [ ! -f "$CONFIG_FILE" ]; then
 }
 EOF
   echo "Config created at $CONFIG_FILE"
+else
+  echo "Updating existing config with Render gateway settings..."
+  # Use node to update config (jq may not be available in all images)
+  node -e "
+    const fs = require('fs');
+    const cfg = JSON.parse(fs.readFileSync('$CONFIG_FILE', 'utf8'));
+    cfg.gateway = cfg.gateway || {};
+    cfg.gateway.port = $GATEWAY_PORT;
+    cfg.gateway.bind = 'lan';
+    cfg.gateway.controlUi = cfg.gateway.controlUi || {};
+    cfg.gateway.controlUi.dangerouslyDisableDeviceAuth = true;
+    fs.writeFileSync('$CONFIG_FILE', JSON.stringify(cfg, null, 2));
+    console.log('Config updated with port=$GATEWAY_PORT, bind=lan');
+  " || echo "Warning: Could not update config, relying on env vars"
 fi
 
 # Create workspace and sessions directories (on ephemeral storage)
@@ -101,4 +121,15 @@ if [ "$DISK_USAGE_AFTER" -gt 90 ]; then
 fi
 
 # Start the gateway
-exec node --max-old-space-size=768 dist/index.js gateway --port "${PORT:-8080}" --bind lan --allow-unconfigured
+# Set port and bind via env vars (takes precedence over config)
+export OPENCLAW_GATEWAY_PORT="${PORT:-8080}"
+export OPENCLAW_GATEWAY_BIND="lan"
+
+# Log startup config for debugging
+echo "Starting gateway:"
+echo "  PORT=$PORT"
+echo "  OPENCLAW_GATEWAY_PORT=$OPENCLAW_GATEWAY_PORT"
+echo "  OPENCLAW_GATEWAY_BIND=$OPENCLAW_GATEWAY_BIND"
+echo "  Command: node dist/index.js gateway --port $OPENCLAW_GATEWAY_PORT --bind lan --allow-unconfigured"
+
+exec node --max-old-space-size=768 dist/index.js gateway --port "$OPENCLAW_GATEWAY_PORT" --bind lan --allow-unconfigured

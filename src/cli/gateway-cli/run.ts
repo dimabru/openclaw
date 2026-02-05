@@ -174,7 +174,13 @@ async function runGatewayCommand(opts: GatewayRunOpts) {
     defaultRuntime.exit(1);
     return;
   }
-  const bindRaw = toOptionString(opts.bind) ?? cfg.gateway?.bind ?? "loopback";
+  // Check CLI arg, then env var, then config, then default to loopback
+  const bindRaw =
+    toOptionString(opts.bind) ??
+    process.env.OPENCLAW_GATEWAY_BIND ??
+    process.env.CLAWDBOT_GATEWAY_BIND ??
+    cfg.gateway?.bind ??
+    "loopback";
   const bind =
     bindRaw === "loopback" ||
     bindRaw === "lan" ||
