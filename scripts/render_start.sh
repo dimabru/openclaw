@@ -34,6 +34,16 @@ if [ ! -f "$CONFIG_FILE" ]; then
       "signal": { "enabled": true }
     }
   },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "ollama": {
+        "baseUrl": "https://desktop-0qhu65q.taila384a4.ts.net/v1",
+        "apiKey": "ollama-local",
+        "api": "openai-completions"
+      }
+    }
+  },
   "auth": {
     "profiles": {
       "anthropic:default": {
@@ -49,8 +59,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
   "agents": {
     "defaults": {
       "model": {
-        "primary": "anthropic/claude-sonnet-4-5",
-        "fallbacks": ["openai/gpt-4.1"]
+        "primary": "ollama/llama3.1"
       },
       "workspace": "$WORKSPACE_DIR"
     }
@@ -79,8 +88,25 @@ else
     cfg.plugins.entries.discord = { enabled: true };
     cfg.plugins.entries.slack = { enabled: true };
     cfg.plugins.entries.signal = { enabled: true };
+    // Ollama provider (Tailscale-connected local instance)
+    cfg.models = cfg.models || {};
+    cfg.models.mode = 'merge';
+    cfg.models.providers = cfg.models.providers || {};
+    cfg.models.providers.ollama = {
+      baseUrl: 'https://desktop-0qhu65q.taila384a4.ts.net/v1',
+      apiKey: 'ollama-local',
+      api: 'openai-completions',
+    };
+    // Use Ollama as primary model (no fallbacks to cloud providers)
+    // To re-enable cloud fallbacks, uncomment the fallbacks line:
+    cfg.agents = cfg.agents || {};
+    cfg.agents.defaults = cfg.agents.defaults || {};
+    cfg.agents.defaults.model = {
+      primary: 'ollama/llama3.1',
+      // fallbacks: ['anthropic/claude-sonnet-4-5', 'openai/gpt-4.1'],
+    };
     fs.writeFileSync('$CONFIG_FILE', JSON.stringify(cfg, null, 2));
-    console.log('Config updated with port=$GATEWAY_PORT, bind=lan, plugins enabled');
+    console.log('Config updated with port=$GATEWAY_PORT, bind=lan, plugins enabled, ollama primary');
   " || echo "Warning: Could not update config, relying on env vars"
 fi
 
