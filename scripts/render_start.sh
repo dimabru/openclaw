@@ -40,7 +40,18 @@ if [ ! -f "$CONFIG_FILE" ]; then
       "ollama": {
         "baseUrl": "https://desktop-0qhu65q.taila384a4.ts.net/v1",
         "apiKey": "ollama-local",
-        "api": "openai-completions"
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "llama3.1",
+            "name": "Llama 3.1",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 131072,
+            "maxTokens": 4096
+          }
+        ]
       }
     }
   },
@@ -96,6 +107,17 @@ else
       baseUrl: 'https://desktop-0qhu65q.taila384a4.ts.net/v1',
       apiKey: 'ollama-local',
       api: 'openai-completions',
+      models: [
+        {
+          id: 'llama3.1',
+          name: 'Llama 3.1',
+          reasoning: false,
+          input: ['text'],
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+          contextWindow: 131072,
+          maxTokens: 4096,
+        },
+      ],
     };
     // Use Ollama as primary model (no fallbacks to cloud providers)
     // To re-enable cloud fallbacks, uncomment the fallbacks line:
