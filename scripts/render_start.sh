@@ -38,6 +38,31 @@ if [ ! -f "$CONFIG_FILE" ]; then
   "models": {
     "mode": "merge",
     "providers": {
+      "deepseek": {
+        "baseUrl": "https://api.deepseek.com/v1",
+        "apiKey": "\${DEEPSEEK_API_KEY}",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "deepseek-chat",
+            "name": "DeepSeek V3",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0.27, "output": 1.10, "cacheRead": 0.07, "cacheWrite": 0 },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          },
+          {
+            "id": "deepseek-reasoner",
+            "name": "DeepSeek R1",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0.55, "output": 2.19, "cacheRead": 0.14, "cacheWrite": 0 },
+            "contextWindow": 131072,
+            "maxTokens": 8192
+          }
+        ]
+      },
       "ollama": {
         "baseUrl": "https://desktop-0qhu65q.taila384a4.ts.net/v1",
         "apiKey": "ollama-local",
@@ -71,8 +96,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
   "agents": {
     "defaults": {
       "model": {
-        "primary": "ollama/llama3.1",
-        "fallbacks": ["openai/gpt-5.2"]
+        "primary": "deepseek/deepseek-chat",
+        "fallbacks": ["ollama/llama3.1", "openai/gpt-5.2"]
       },
       "workspace": "$WORKSPACE_DIR"
     }
@@ -102,10 +127,37 @@ else
     cfg.plugins.entries.discord = { enabled: true };
     cfg.plugins.entries.slack = { enabled: true };
     cfg.plugins.entries.signal = { enabled: true };
-    // Ollama provider (Tailscale-connected local instance)
+    // Model providers
     cfg.models = cfg.models || {};
     cfg.models.mode = 'merge';
     cfg.models.providers = cfg.models.providers || {};
+    // DeepSeek API (primary)
+    cfg.models.providers.deepseek = {
+      baseUrl: 'https://api.deepseek.com/v1',
+      apiKey: '${DEEPSEEK_API_KEY}',
+      api: 'openai-completions',
+      models: [
+        {
+          id: 'deepseek-chat',
+          name: 'DeepSeek V3',
+          reasoning: false,
+          input: ['text'],
+          cost: { input: 0.27, output: 1.10, cacheRead: 0.07, cacheWrite: 0 },
+          contextWindow: 131072,
+          maxTokens: 8192,
+        },
+        {
+          id: 'deepseek-reasoner',
+          name: 'DeepSeek R1',
+          reasoning: true,
+          input: ['text'],
+          cost: { input: 0.55, output: 2.19, cacheRead: 0.14, cacheWrite: 0 },
+          contextWindow: 131072,
+          maxTokens: 8192,
+        },
+      ],
+    };
+    // Ollama (Tailscale-connected local instance, fallback)
     cfg.models.providers.ollama = {
       baseUrl: 'https://desktop-0qhu65q.taila384a4.ts.net/v1',
       apiKey: 'ollama-local',
@@ -122,13 +174,12 @@ else
         },
       ],
     };
-    // Use Ollama as primary model (no fallbacks to cloud providers)
-    // To re-enable cloud fallbacks, uncomment the fallbacks line:
+    // DeepSeek primary, Ollama + GPT as fallbacks
     cfg.agents = cfg.agents || {};
     cfg.agents.defaults = cfg.agents.defaults || {};
     cfg.agents.defaults.model = {
-      primary: 'ollama/llama3.1',
-      fallbacks: ['openai/gpt-5.2'],
+      primary: 'deepseek/deepseek-chat',
+      fallbacks: ['ollama/llama3.1', 'openai/gpt-5.2'],
     };
     fs.writeFileSync('$CONFIG_FILE', JSON.stringify(cfg, null, 2));
     console.log('Config updated with port=$GATEWAY_PORT, bind=lan, plugins enabled, ollama primary');
