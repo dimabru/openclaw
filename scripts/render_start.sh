@@ -23,7 +23,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
 {
   "gateway": {
     "port": $GATEWAY_PORT,
-    "bind": "lan"
+    "bind": "lan",
+    "trustedProxies": ["10.0.0.0/8"]
   },
   "plugins": {
     "entries": {
@@ -70,7 +71,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
   "agents": {
     "defaults": {
       "model": {
-        "primary": "ollama/llama3.1"
+        "primary": "ollama/llama3.1",
+        "fallbacks": ["openai/gpt-4.1"]
       },
       "workspace": "$WORKSPACE_DIR"
     }
@@ -87,6 +89,7 @@ else
     cfg.gateway = cfg.gateway || {};
     cfg.gateway.port = $GATEWAY_PORT;
     cfg.gateway.bind = 'lan';
+    cfg.gateway.trustedProxies = ['10.0.0.0/8'];
     // Remove dangerouslyDisableDeviceAuth if it was previously set
     if (cfg.gateway.controlUi) {
       delete cfg.gateway.controlUi.dangerouslyDisableDeviceAuth;
@@ -125,7 +128,7 @@ else
     cfg.agents.defaults = cfg.agents.defaults || {};
     cfg.agents.defaults.model = {
       primary: 'ollama/llama3.1',
-      // fallbacks: ['anthropic/claude-sonnet-4-5', 'openai/gpt-4.1'],
+      fallbacks: ['openai/gpt-4.1'],
     };
     fs.writeFileSync('$CONFIG_FILE', JSON.stringify(cfg, null, 2));
     console.log('Config updated with port=$GATEWAY_PORT, bind=lan, plugins enabled, ollama primary');
@@ -183,6 +186,10 @@ if [ "$DISK_USAGE_AFTER" -gt 90 ]; then
   echo "WARNING: Disk still above 90% after cleanup. Top space users:"
   du -sh /data/* 2>/dev/null | sort -h | tail -5 || true
 fi
+
+# Verify Ollama connectivity
+echo "Checking Ollama endpoint..."
+curl -sf --max-time 10 https://desktop-0qhu65q.taila384a4.ts.net/v1/models && echo "" && echo "Ollama: reachable" || echo "WARNING: Ollama endpoint not reachable from Render"
 
 # Start the gateway
 # Set port and bind via env vars (takes precedence over config)
