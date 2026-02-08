@@ -72,7 +72,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
     "defaults": {
       "model": {
         "primary": "ollama/llama3.1",
-        "fallbacks": ["openai/gpt-4.1"]
+        "fallbacks": ["openai/gpt-5.2"]
       },
       "workspace": "$WORKSPACE_DIR"
     }
@@ -128,7 +128,7 @@ else
     cfg.agents.defaults = cfg.agents.defaults || {};
     cfg.agents.defaults.model = {
       primary: 'ollama/llama3.1',
-      fallbacks: ['openai/gpt-4.1'],
+      fallbacks: ['openai/gpt-5.2'],
     };
     fs.writeFileSync('$CONFIG_FILE', JSON.stringify(cfg, null, 2));
     console.log('Config updated with port=$GATEWAY_PORT, bind=lan, plugins enabled, ollama primary');
